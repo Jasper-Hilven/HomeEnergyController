@@ -105,4 +105,4 @@ This script will:
 
 
 ## License
-Add your preferred license here.
+WTFPL
