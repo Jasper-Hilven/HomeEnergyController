@@ -8,11 +8,17 @@ from EnergyController import control_energy_flow
 
 
 def singleRun():
-    ips = ["192.168.2.108", "192.168.2.233", "192.168.2.147"]
+    ips = ["192.168.2.108", "192.168.2.147", "192.168.2.233"]
 
     statuses = BatteryCommunication.get_all_battery_statuses(ips)
-    print("=== Raw battery statuses ===")
-    print(json.dumps(statuses, indent=2, sort_keys=True))
+
+    errors = {ip: data for ip, data in statuses.items() if "error" in data}
+
+    if errors:
+        print("[ERROR] One or more batteries reported communication issues:")
+        for ip, data in errors.items():
+            print(f"  - {ip}: {data['error']}")
+        return
 
     batteries = []
     for ip, status in statuses.items():

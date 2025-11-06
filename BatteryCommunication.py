@@ -37,6 +37,7 @@ def send_and_receive(ip: str, port: int, payload: dict, timeout: float = 1.5, re
             break
     return responses
 
+
 def get_battery_status(ip: str) -> dict:
     payload = {"id": 1, "method": "ES.GetMode", "params": {"id": 0}}
     responses = send_and_receive(ip, DEFAULT_PORT, payload)
@@ -54,14 +55,45 @@ def get_battery_status(ip: str) -> dict:
     # If no response packets were received
     return {"error": "No response from device"}
 
-def get_all_battery_statuses(ips: List[str]) -> dict:
+
+def get_all_battery_statuses(ips: List[str], retries: int = 3, delay: float = 1.5) -> dict:
+    """
+    Requests battery status from multiple IPs with retries.
+
+    :param ips: List of IP addresses.
+    :param retries: Number of retries per IP.
+    :param delay: Delay in seconds between retries.
+    :return: Dict mapping IPs to results.
+    """
     results = {}
+
     for ip in ips:
-        try:
-            print(f"Requesting status from {ip}...")
-            results[ip] = get_battery_status(ip)
-        except Exception as e:
-            results[ip] = {"error": str(e)}
+        print(f"Requesting status from {ip}...")
+        last_error = None
+
+        for attempt in range(1, retries + 1):
+            try:
+                result = get_battery_status(ip)
+
+                # Consider a response with an "error" key as a failed attempt
+                if "error" not in result:
+                    results[ip] = result
+                    break
+                else:
+                    last_error = result["error"]
+                    print(f"Attempt {attempt}/{retries} failed for {ip}: {last_error}")
+
+            except Exception as e:
+                last_error = str(e)
+                print(f"Attempt {attempt}/{retries} threw exception for {ip}: {last_error}")
+
+            if attempt < retries:
+                time.sleep(delay)
+
+        # If all retries failed, record the last error
+        if ip not in results:
+            results[ip] = {"error": f"Failed after {retries} retries: {last_error}"}
+
     return results
 
 
