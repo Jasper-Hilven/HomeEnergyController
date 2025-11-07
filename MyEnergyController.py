@@ -18,7 +18,6 @@ def singleRun():
         print("[ERROR] One or more batteries reported communication issues:")
         for ip, data in errors.items():
             print(f"  - {ip}: {data['error']}")
-        return
 
     batteries = []
     for ip, status in statuses.items():
