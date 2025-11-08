@@ -27,7 +27,9 @@ def singleRun():
             mode = res.get("mode", "Auto")
 
             off = res.get("offgrid_power", 0) or 0
+            off = off if (10000 >= off >= -10000) else 0
             on = res.get("ongrid_power", 0) or 0
+            on = on if (10000 >= on >= -10000) else 0
             effective_power = off if off != 0 else (on if on != 0 else 0)
 
             batteries.append({
